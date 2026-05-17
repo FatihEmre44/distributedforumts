@@ -23,6 +23,10 @@ class User {
         this.postCount += 1;
         return this.postCount;
     }
+    decrementPostCount() {
+        this.postCount = Math.max(0, this.postCount - 1);
+        return this.postCount;
+    }
     toJSON() {
         return {
             id: this.id,

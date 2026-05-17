@@ -50,5 +50,13 @@ class UserService {
         user.incrementPostCount();
         return user;
     }
+    async decrementPostCount(userId) {
+        const user = await this.findById(userId);
+        if (!user) {
+            return null;
+        }
+        user.decrementPostCount();
+        return user;
+    }
 }
 exports.UserService = UserService;

@@ -1,17 +1,17 @@
 import { IQueueProvider } from "../interfaces/IQueueProvider";
 import { PostCreatedEvent } from "../interfaces/PostCreatedEvent";
 import { PostDeletedEvent } from "../interfaces/PostDeletedEvent";
-import { UserService } from "./userService";
+import { TopicService } from "./topicService";
 
-export class UserStatsWorker {
+export class TopicStatsWorker {
 	private readonly queueProvider: IQueueProvider;
 	private readonly queueName: string;
-	private readonly userService: UserService;
+	private readonly topicService: TopicService;
 
-	constructor(queueProvider: IQueueProvider, queueName: string, userService: UserService) {
+	constructor(queueProvider: IQueueProvider, queueName: string, topicService: TopicService) {
 		this.queueProvider = queueProvider;
 		this.queueName = queueName;
-		this.userService = userService;
+		this.topicService = topicService;
 	}
 
 	async start(): Promise<void> {
@@ -20,7 +20,7 @@ export class UserStatsWorker {
 			try {
 				event = JSON.parse(raw) as PostCreatedEvent | PostDeletedEvent;
 			} catch (error) {
-				console.error("UserStatsWorker: invalid message payload", error);
+				console.error("TopicStatsWorker: invalid message payload", error);
 				return;
 			}
 
@@ -28,28 +28,28 @@ export class UserStatsWorker {
 				return;
 			}
 
-			const authorId = event.post.authorId;
-			if (!authorId) {
+			const topicId = event.post.topicId;
+			if (!topicId) {
 				return;
 			}
 
 			if (event.type === "post.created") {
-				console.log("UserStatsWorker: consumed post.created", {
+				console.log("TopicStatsWorker: consumed post.created", {
 					queue: this.queueName,
 					postId: event.post.id,
-					authorId,
+					topicId,
 				});
-				await this.userService.incrementPostCount(authorId);
+				await this.topicService.incrementTopicStats(topicId);
 				return;
 			}
 
 			if (event.type === "post.deleted") {
-				console.log("UserStatsWorker: consumed post.deleted", {
+				console.log("TopicStatsWorker: consumed post.deleted", {
 					queue: this.queueName,
 					postId: event.post.id,
-					authorId,
+					topicId,
 				});
-				await this.userService.decrementPostCount(authorId);
+				await this.topicService.decrementTopicStats(topicId, event.post.id ?? "");
 			}
 		});
 	}

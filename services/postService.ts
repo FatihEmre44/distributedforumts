@@ -1,6 +1,7 @@
 import { Post, PostProps } from "../models/post";
 import { IQueueProvider } from "../interfaces/IQueueProvider";
 import { PostCreatedEvent } from "../interfaces/PostCreatedEvent";
+import { PostDeletedEvent } from "../interfaces/PostDeletedEvent";
 
 export interface PostServiceOptions {
 	queueProvider?: IQueueProvider | null;
@@ -18,8 +19,8 @@ export class PostService {
 		this.queueName = queueName;
 	}
 
-	async createPost({ id, authorId, content, createdAt, upvotes = 0, aiStatus, aiScore }: PostProps = {}): Promise<Post> {
-		const post = new Post({ id, authorId, content, createdAt, upvotes, aiStatus, aiScore });
+	async createPost({ id, authorId, topicId, content, createdAt, upvotes = 0, aiStatus, aiScore }: PostProps = {}): Promise<Post> {
+		const post = new Post({ id, authorId, topicId, content, createdAt, upvotes, aiStatus, aiScore });
 		if (!post.id) {
 			throw new Error("Post id is required");
 		}
@@ -36,6 +37,7 @@ export class PostService {
 				queue: this.queueName,
 				postId: payload.post.id,
 				authorId: payload.post.authorId,
+				topicId: payload.post.topicId,
 			});
 			await this.queueProvider.publish(this.queueName, JSON.stringify(payload));
 		}
@@ -54,8 +56,26 @@ export class PostService {
 		return Array.from(this.postsById.values()).filter((post) => post.authorId === authorId);
 	}
 
-	async deletePost(postId: string): Promise<boolean> {
-		return this.postsById.delete(postId);
+	async deletePost(postId: string): Promise<Post | null> {
+		const post = await this.findById(postId);
+		if (!post) {
+			return null;
+		}
+		this.postsById.delete(postId);
+		if (this.queueProvider && this.queueName) {
+			const payload: PostDeletedEvent = {
+				type: "post.deleted",
+				post: post.toJSON(),
+			};
+			console.log("PostService: publishing post.deleted", {
+				queue: this.queueName,
+				postId: payload.post.id,
+				authorId: payload.post.authorId,
+				topicId: payload.post.topicId,
+			});
+			await this.queueProvider.publish(this.queueName, JSON.stringify(payload));
+		}
+		return post;
 	}
 
 	async upvote(postId: string): Promise<Post | null> {

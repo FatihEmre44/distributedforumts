@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserStatsWorker = void 0;
-class UserStatsWorker {
-    constructor(queueProvider, queueName, userService) {
+exports.TopicStatsWorker = void 0;
+class TopicStatsWorker {
+    constructor(queueProvider, queueName, topicService) {
         this.queueProvider = queueProvider;
         this.queueName = queueName;
-        this.userService = userService;
+        this.topicService = topicService;
     }
     async start() {
         await this.queueProvider.subscribe(this.queueName, async (raw) => {
@@ -14,34 +14,34 @@ class UserStatsWorker {
                 event = JSON.parse(raw);
             }
             catch (error) {
-                console.error("UserStatsWorker: invalid message payload", error);
+                console.error("TopicStatsWorker: invalid message payload", error);
                 return;
             }
             if (!event) {
                 return;
             }
-            const authorId = event.post.authorId;
-            if (!authorId) {
+            const topicId = event.post.topicId;
+            if (!topicId) {
                 return;
             }
             if (event.type === "post.created") {
-                console.log("UserStatsWorker: consumed post.created", {
+                console.log("TopicStatsWorker: consumed post.created", {
                     queue: this.queueName,
                     postId: event.post.id,
-                    authorId,
+                    topicId,
                 });
-                await this.userService.incrementPostCount(authorId);
+                await this.topicService.incrementTopicStats(topicId);
                 return;
             }
             if (event.type === "post.deleted") {
-                console.log("UserStatsWorker: consumed post.deleted", {
+                console.log("TopicStatsWorker: consumed post.deleted", {
                     queue: this.queueName,
                     postId: event.post.id,
-                    authorId,
+                    topicId,
                 });
-                await this.userService.decrementPostCount(authorId);
+                await this.topicService.decrementTopicStats(topicId, event.post.id ?? "");
             }
         });
     }
 }
-exports.UserStatsWorker = UserStatsWorker;
+exports.TopicStatsWorker = TopicStatsWorker;

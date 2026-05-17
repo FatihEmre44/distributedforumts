@@ -36,6 +36,11 @@ export class User {
 		return this.postCount;
 	}
 
+	decrementPostCount(): number {
+		this.postCount = Math.max(0, this.postCount - 1);
+		return this.postCount;
+	}
+
 	toJSON(): { id: string | null; username: string; sadakatpuani: number; postCount: number } {
 		return {
 			id: this.id,

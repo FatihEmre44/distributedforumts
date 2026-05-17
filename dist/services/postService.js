@@ -8,8 +8,8 @@ class PostService {
         this.queueProvider = queueProvider;
         this.queueName = queueName;
     }
-    async createPost({ id, authorId, content, createdAt, upvotes = 0, aiStatus, aiScore } = {}) {
-        const post = new post_1.Post({ id, authorId, content, createdAt, upvotes, aiStatus, aiScore });
+    async createPost({ id, authorId, topicId, content, createdAt, upvotes = 0, aiStatus, aiScore } = {}) {
+        const post = new post_1.Post({ id, authorId, topicId, content, createdAt, upvotes, aiStatus, aiScore });
         if (!post.id) {
             throw new Error("Post id is required");
         }
@@ -26,6 +26,7 @@ class PostService {
                 queue: this.queueName,
                 postId: payload.post.id,
                 authorId: payload.post.authorId,
+                topicId: payload.post.topicId,
             });
             await this.queueProvider.publish(this.queueName, JSON.stringify(payload));
         }
@@ -41,7 +42,25 @@ class PostService {
         return Array.from(this.postsById.values()).filter((post) => post.authorId === authorId);
     }
     async deletePost(postId) {
-        return this.postsById.delete(postId);
+        const post = await this.findById(postId);
+        if (!post) {
+            return null;
+        }
+        this.postsById.delete(postId);
+        if (this.queueProvider && this.queueName) {
+            const payload = {
+                type: "post.deleted",
+                post: post.toJSON(),
+            };
+            console.log("PostService: publishing post.deleted", {
+                queue: this.queueName,
+                postId: payload.post.id,
+                authorId: payload.post.authorId,
+                topicId: payload.post.topicId,
+            });
+            await this.queueProvider.publish(this.queueName, JSON.stringify(payload));
+        }
+        return post;
     }
     async upvote(postId) {
         const post = await this.findById(postId);

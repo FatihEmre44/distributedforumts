@@ -57,4 +57,13 @@ export class UserService {
 		user.incrementPostCount();
 		return user;
 	}
+
+	async decrementPostCount(userId: string): Promise<User | null> {
+		const user = await this.findById(userId);
+		if (!user) {
+			return null;
+		}
+		user.decrementPostCount();
+		return user;
+	}
 }
