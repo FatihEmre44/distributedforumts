@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  forum-api:
+    build:
+      context: ./forum-api
+    environment:
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+
+  userservice:
+    build:
+      context: ./userservice
+    environment:
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+
+  postservice:
+    build:
+      context: ./postservice
+    environment:
+      PORT: "3002"
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
+      POSTS_QUEUE: "posts.events"
+    ports:
+      - "3002:3002"
+    depends_on:
+      - rabbitmq
+
+  topicservice:
+    build:
+      context: ./topicservice
+    environment:
+      PORT: "3003"
+    ports:
+      - "3003:3003"
+
+  authservice:
+    build:
+      context: ./authservice
+    environment:
+      PORT: "3004"
+    ports:
+      - "3004:3004"
+
+  stats-worker:
+    build:
+      context: ./stats-worker
+    environment:
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
+      POSTS_QUEUE: "posts.events"
+    depends_on:
+      - rabbitmq
+
+  ai-processor:
+    build:
+      context: ./ai-processor
+    environment:
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
+      POSTS_QUEUE: "posts.events"
+    depends_on:
+      - rabbitmq

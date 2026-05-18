@@ -2,10 +2,13 @@
   "name": "gsforum",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main.js",
+  "main": "dist/services/forum-api/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/main.js",
+    "start": "node dist/services/forum-api/index.js",
+    "start:api": "node dist/services/forum-api/index.js",
+    "start:stats": "node dist/services/stats-worker/index.js",
+    "start:ai": "node dist/services/ai-processor/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
