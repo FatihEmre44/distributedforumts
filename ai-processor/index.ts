@@ -38,6 +38,11 @@ const startProcessor = async (): Promise<void> => {
 			}
 
 			const { flagged, reasons } = await aiService.moderateContent(event.post.content ?? "");
+			console.log("AiProcessor: moderation decision", {
+				postId: event.post.id,
+				flagged,
+				reasons,
+			});
 			if (flagged) {
 				const payload: PostModerationFailedEvent = {
 					type: "post.moderation.failed",

@@ -37,6 +37,7 @@ services:
       POSTS_QUEUE: "posts.events"
       POSTS_QUEUE_STATS: "posts.events.stats"
       POSTS_QUEUE_AI: "posts.events.ai"
+      AUTH_SERVICE_URL: "http://authservice:3004"
     ports:
       - "3002:3002"
     depends_on:

@@ -28,4 +28,26 @@ export class AuthController {
 			res.status(400).json({ error: (error as Error).message });
 		}
 	};
+
+	validate = async (req: Request, res: Response): Promise<void> => {
+		const header = req.headers.authorization || "";
+		if (!header.startsWith("Bearer ")) {
+			res.status(401).json({ valid: false });
+			return;
+		}
+
+		const token = header.slice("Bearer ".length).trim();
+		if (!token) {
+			res.status(401).json({ valid: false });
+			return;
+		}
+
+		const valid = await this.authService.isTokenValid(token);
+		if (!valid) {
+			res.status(401).json({ valid: false });
+			return;
+		}
+
+		res.json({ valid: true });
+	};
 }

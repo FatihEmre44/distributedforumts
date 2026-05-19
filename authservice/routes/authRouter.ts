@@ -9,6 +9,7 @@ const createAuthRouter = (authService: AuthService): Router => {
 
 	router.post("/register", controller.register);
 	router.post("/login", controller.login);
+	router.post("/validate", controller.validate);
 
 	return router;
 };
